@@ -12,10 +12,7 @@ import android.widget.ImageView;
 import android.view.Display;
 import android.view.WindowManager;
 import android.graphics.Point;
-import android.animation.Animator;
-import android.animation.AnimatorSet;
-
-import java.util.List;
+import android.view.View;
 
 
 public class MainActivity extends ActionBarActivity {
@@ -28,8 +25,13 @@ public class MainActivity extends ActionBarActivity {
     ObjectAnimator objectAnimator;
 
 
-    float dispwidth;
-    float hiyowidth;
+    float disp_width;
+    float disp_height;
+    float hiyo_width;
+    float hiyo_height;
+
+    float hiyoY;
+    int gravity = 5;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,9 +47,12 @@ public class MainActivity extends ActionBarActivity {
         dispsize = new Point();
         disp.getSize(dispsize);
         //画面の横幅取得
-        dispwidth = dispsize.x;
+        disp_width = dispsize.x;
+        //画面の縦幅取得
+        disp_height = dispsize.y;
 
         hiyoko.setImageResource(R.drawable.hiyoko);
+
 
     }
 
@@ -57,8 +62,12 @@ public class MainActivity extends ActionBarActivity {
         if (hasFocus) {
             // ローディング中の画像を表示する
             this.hiyoko.setVisibility(hiyoko.VISIBLE);
-           hiyowidth = this.hiyoko.getWidth();
-           Log.d("ひよこの横幅","hiyowidth = " + hiyowidth);
+            hiyo_width = this.hiyoko.getWidth();
+            hiyo_height = this.hiyoko.getHeight();
+            Log.d("ひよこの横幅","hiyowidth = " + hiyo_width);
+            //ひよこの初期Y座標取得
+            hiyoY = hiyoko.getY();
+            Log.d("ひよこのY座標","hiyoY = " + hiyoY);
         }
         super.onWindowFocusChanged(hasFocus);
         animateTranslationX(hiyoko);
@@ -66,15 +75,26 @@ public class MainActivity extends ActionBarActivity {
 
     private void animateTranslationX(ImageView target){
         // translationXプロパティを変化させます
-        objectAnimator = ObjectAnimator.ofFloat(target, "translationX",0f,dispwidth - hiyowidth);
+        objectAnimator = ObjectAnimator.ofFloat(target, "translationX",0f,disp_width - hiyo_width);
         // 5秒かけて実行させます
         objectAnimator.setDuration(1500);
 
         objectAnimator.setRepeatCount(Animation.INFINITE);
         objectAnimator.setRepeatMode(Animation.REVERSE);
-
         objectAnimator.start();
+    }
 
+    public void hiyokoJump(View v){
+        for(int jump_pow = 50;jump_pow >= -50;jump_pow -= gravity){
+            if(hiyoY < 0.0){
+                hiyoY = 0;
+            }else if(hiyoY > disp_height - hiyo_height)
+            {
+                hiyoY = disp_height - hiyo_height;
+            }
+            hiyoko.setY(hiyoY - jump_pow);
+            Log.d("ひよこのY座標","hiyoY = " + hiyoY);
+        }
     }
 
 
