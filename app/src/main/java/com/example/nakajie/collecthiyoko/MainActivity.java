@@ -76,8 +76,8 @@ public class MainActivity extends ActionBarActivity {
     private void animateTranslationX(ImageView target){
         // translationXプロパティを変化させます
         objectAnimator = ObjectAnimator.ofFloat(target, "translationX",0f,disp_width - hiyo_width);
-        // 5秒かけて実行させます
-        objectAnimator.setDuration(1500);
+        // 2秒かけて実行させます
+        objectAnimator.setDuration(2000);
 
         objectAnimator.setRepeatCount(Animation.INFINITE);
         objectAnimator.setRepeatMode(Animation.REVERSE);
