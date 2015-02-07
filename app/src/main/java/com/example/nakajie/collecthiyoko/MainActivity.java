@@ -1,18 +1,18 @@
 package com.example.nakajie.collecthiyoko;
 
 import android.animation.ObjectAnimator;
-import android.media.Image;
-import android.support.v7.app.ActionBarActivity;
+import android.graphics.Point;
 import android.os.Bundle;
+import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
+import android.view.Display;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.widget.ImageView;
-import android.view.Display;
-import android.view.WindowManager;
-import android.graphics.Point;
-import android.view.View;
+import android.graphics.Canvas;
 
 
 public class MainActivity extends ActionBarActivity {
@@ -32,6 +32,8 @@ public class MainActivity extends ActionBarActivity {
 
     float hiyoY;
     int gravity = 5;
+    int jump_pow = 50;
+    boolean jump_flag;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,7 +72,20 @@ public class MainActivity extends ActionBarActivity {
             Log.d("ひよこのY座標","hiyoY = " + hiyoY);
         }
         super.onWindowFocusChanged(hasFocus);
-        animateTranslationX(hiyoko);
+        animateTranslationX(hiyoko);//
+    }
+
+    public void onDraw(Canvas c){
+
+        if(hiyoY < 0.0){
+            hiyoY = 0;
+        }else if(hiyoY > disp_height - hiyo_height){
+            hiyoY = disp_height - hiyo_height;
+        }
+         hiyoko.setY(hiyoY - jump_pow);
+         Log.d("ひよこのY座標","hiyoY = " + hiyoY);
+         jump_pow -= gravity;
+
     }
 
     private void animateTranslationX(ImageView target){
@@ -82,19 +97,6 @@ public class MainActivity extends ActionBarActivity {
         objectAnimator.setRepeatCount(Animation.INFINITE);
         objectAnimator.setRepeatMode(Animation.REVERSE);
         objectAnimator.start();
-    }
-
-    public void hiyokoJump(View v){
-        for(int jump_pow = 50;jump_pow >= -50;jump_pow -= gravity){
-            if(hiyoY < 0.0){
-                hiyoY = 0;
-            }else if(hiyoY > disp_height - hiyo_height)
-            {
-                hiyoY = disp_height - hiyo_height;
-            }
-            hiyoko.setY(hiyoY - jump_pow);
-            Log.d("ひよこのY座標","hiyoY = " + hiyoY);
-        }
     }
 
 
