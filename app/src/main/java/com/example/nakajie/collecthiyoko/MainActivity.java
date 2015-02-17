@@ -143,7 +143,7 @@ public class MainActivity extends ActionBarActivity {
         },0,30);
     }
 
-    public void hiyokoCollision(){
+    public void hiyokoCollision(){  //当たり判定
         tori_Timer = new Timer();
         tori_Timer.schedule(new TimerTask() {
             @Override
