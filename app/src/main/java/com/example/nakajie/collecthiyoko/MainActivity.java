@@ -188,11 +188,11 @@ public class MainActivity extends ActionBarActivity {
                         @Override
                         public void run() {
 
-                            if (hiyoY <= shokiY && hiyoY >= 0) {
+                            if (hiyoY <= shokiY && hiyoY >= 0) {    //ジャンプ中
                                 hiyoY -= jump_pow;
                             }
 
-                            if (hiyoY > shokiY) {
+                            if (hiyoY > shokiY) {   //地面にめり込んだ時
                                 hiyoY = shokiY;
                                 jump_pow = 50;
                                 jump_Timer.cancel();
@@ -200,7 +200,7 @@ public class MainActivity extends ActionBarActivity {
 
                             }
 
-                            if (hiyoY < 0) {
+                            if (hiyoY < 0) {    //天井にめり込んだ時
                                 hiyoY = 0;
                                 jump_pow = 0;
                             }
