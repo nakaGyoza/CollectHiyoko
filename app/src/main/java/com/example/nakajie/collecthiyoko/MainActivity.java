@@ -1,17 +1,14 @@
 package com.example.nakajie.collecthiyoko;
 
 import android.animation.ObjectAnimator;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
-import android.view.animation.Animation;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import java.util.Random;
@@ -21,227 +18,341 @@ import java.util.TimerTask;
 
 public class MainActivity extends ActionBarActivity {
 
+    Random random;
 
-    Random rnd;
 
-    ObjectAnimator objectAnimator;
+    Handler handler;
+    Timer jumpTimer = null,
+          translateTimer = null,
+          collisionTimer = null,
+          gameTimer = null;
 
-    Timer jump_Timer = null;
-    Handler jump_Handler;
-
-    Timer translate_Timer = null;
-    Handler translate_Handler;
-
-    Timer tori_Timer = null;
-    Handler tori_Handler;
-
-    Timer time_Timer = null;
-    Handler time_Handler;
-    int m;
-    int s;
     int time = 30;
 
-    FrameLayout hiyokoView;
+    /*
+     * 各View
+     */
     ImageView hiyoko;
     ImageView niwatori;
-    TextView score_text;
+    TextView scoreText;
     TextView time_text;
 
-    float hiyo_width;
-    float hiyo_height;
-    float tori_width;
-    float tori_height;
-    float view_width;
-    float view_height;
+    /*
+     * ひよこのサイズ
+     */
+    float hiyokoWidth;
+    float hiyokoHeight;
 
-    int hiyoY;
-    int hiyoX;
+    /*
+     * にわとりのサイズ
+     */
+    float niwatoriWidth;
+    float niwatoriHeight;
+
+    /*
+     * ゲームのフレームのサイズ
+     */
+    float gameFrameWidth;
+    float gameFrameHeight;
+
+    int hiyokoY;
+    int hiyokoX;
     int shokiY;
     int gravity = 3;
     int jump_pow = 42;
     int score;
 
-    boolean hiyo_direction = false; //false...right true...left
+    boolean hiyokoDirection = false; //false...right true...left
 
+    /*
+     * 方向と値が決まっているのなら、名前をつけちゃう
+     */
+    final boolean DIRECTION_LEFT = true;
+    final boolean DIRECTION_RIGHT = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        hiyoko = (ImageView) findViewById(R.id.hiyoko);
-        niwatori = (ImageView)findViewById(R.id.niwatori);
-        hiyokoView = (FrameLayout) findViewById(R.id.hiyokoView);
-        score_text = (TextView)findViewById(R.id.score);
-        score_text.setText("" + score);
-        time_text = (TextView)findViewById(R.id.time);
-        time_text.setText("0:00");
+        // Viewの初期化(findViewById)はまとめてメソッド化しちゃおう
+        initViews();
 
-        jump_Handler = new Handler();
-        tori_Handler = new Handler();
-        translate_Handler = new Handler();
-        rnd = new Random();
+        // handlerは一個でいいかも
+        // jump_Handler = new Handler();
+        // tori_Handler = new Handler();
+        handler = new Handler();
+        random = new Random();
 
-        hiyokoTranslationX();
-        hiyokoCollision();
-
-
-        //hiyoko.setImageResource(R.drawable.hiyoko);
-
+        hiyokoTranslateX();
+        startCollisionTimer();
+        startGameTimer();
     }
 
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
         // 表示と同時にウィジェットの高さや幅を取得したいときは大抵ここで取る。
         if (hasFocus) {
+            /*
+             * 変数名は分かりやすいものをつける(ゲームの枠を表すViewなのでgameFrameView)
+             * あと、色んな所で使う必要のない変数はローカルに定義する
+             */
+            FrameLayout gameFrameView = (FrameLayout) findViewById(R.id.gameFrame);
 
-            view_width = this.hiyokoView.getWidth();
-            view_height = this.hiyokoView.getHeight();
+            /*
+             * ゲームの領域を取得する
+             * Javaは基本 _ で繋がず単語の区切りで大文字にする
+             * (スネークケース、キャメルケース)
+             */
+            gameFrameWidth = gameFrameView.getWidth();
+            gameFrameHeight = gameFrameView.getHeight();
 
             // ローディング中の画像を表示する
-            this.hiyoko.setVisibility(hiyoko.VISIBLE);
-            hiyo_width = this.hiyoko.getWidth();
-            hiyo_height = this.hiyoko.getHeight();
-            Log.d("ひよこの横幅", "hiyowidth = " + hiyo_width);
-            //ひよこの初期座標取得
-            hiyoX = 0;
-            hiyoY = (int)(view_height - hiyo_height);
-            shokiY = (int)hiyoko.getY();
-            Log.d("ひよこのY座標", "hiyoY = " + hiyoY);
+            hiyoko.setVisibility(hiyoko.VISIBLE);
+            niwatori.setVisibility(niwatori.VISIBLE);
 
-            this.niwatori.setVisibility(niwatori.VISIBLE);
-            tori_width = this.niwatori.getWidth();
-            tori_height = this.niwatori.getHeight();
-            niwatori.setX(rnd.nextInt((int)(view_width - tori_width)));
-            niwatori.setY(rnd.nextInt((int)(view_height - tori_height)));
+            /*
+             * ひよこの縦横のサイズを取得する
+             */
+            hiyokoWidth = hiyoko.getWidth();
+            hiyokoHeight = hiyoko.getHeight();
+
+            Log.d("ひよこの横幅", "hiyowidth = " + hiyokoWidth);
+
+            /*
+             * にわとりの縦横のサイズを取得する
+             */
+            niwatoriWidth = niwatori.getWidth();
+            niwatoriHeight = niwatori.getHeight();
+
+            // ひよこの初期座標取得
+            hiyokoX = 0;
+            hiyokoY = (int) (gameFrameHeight - hiyokoHeight);
+            shokiY = (int) hiyoko.getY();
+            Log.d("ひよこのY座標", "hiyokoY = " + hiyokoY);
+
+            /*
+             * にわとりの初期位置をランダムで決定する
+             */
+            appearNiwatoriRandom();
 
         }
         super.onWindowFocusChanged(hasFocus);
     }
 
-
-
-
-    public void hiyokoTranslationX() {
-        translate_Timer = new Timer();
-        translate_Timer.schedule(new TimerTask() {
+    public void startGameTimer() {
+        gameTimer = new Timer();
+        gameTimer.schedule(new TimerTask() {
             @Override
             public void run() {
-                translate_Handler.post(new Runnable() {
+                handler.post(new Runnable() {
                     @Override
                     public void run() {
-                        if (hiyo_direction == false){
-                            hiyoko.setX(hiyoko.getX() + 10);
-                            if (hiyoko.getX() + hiyo_width > view_width){ hiyo_direction = true; }
-                        }else{
-                            hiyoko.setX(hiyoko.getX() - 10);
-                            if (hiyoko.getX() < 0){ hiyo_direction = false; }
+                        time--;
+                        if (time < 0) {
+                            gameTimer.cancel();
+                            gameTimer = null;
+                            finish();
+                            Intent intent = new Intent(MainActivity.this, ResultActivity.class);
+                            Bundle bandle = new Bundle();
+                            bandle.putInt("スコア", score);
+                            intent.putExtras(bandle);
+                            startActivity(intent);
+                        }else {
+                            time_text.setText("" + time);
                         }
+
                     }
                 });
             }
-        },0,30);
+        },0,1000);
     }
 
-    public void hiyokoCollision(){  //当たり判定
-        tori_Timer = new Timer();
-        tori_Timer.schedule(new TimerTask() {
+
+    public void hiyokoTranslateX() {
+        translateTimer = new Timer();
+        translateTimer.schedule(new TimerTask() {
             @Override
             public void run() {
-
-                tori_Handler.post(new Runnable() {
+                handler.post(new Runnable() {
                     @Override
                     public void run() {
-                        if (hiyoko.getX() < niwatori.getX() + tori_width && niwatori.getX() < hiyoko.getX() + hiyo_width){
-                            if (hiyoko.getY() < niwatori.getY() + tori_height && niwatori.getY() < hiyoko.getY() + hiyo_height){
-                                niwatori.setX(rnd.nextInt((int)(view_width - tori_width)));
-                                niwatori.setY(rnd.nextInt((int)(view_height - tori_height)));
-                                score++;
-                                score_text.setText("" + score);
-                                Log.d("score = ","" + score);
-                            }
-                        }
+                        slideHiyoko(hiyokoDirection);
+                        changeDirection();
+                    }
+                });
+            }
+        }, 0, 30);
+    }
 
+    public void startCollisionTimer() {  //当たり判定
+        if (collisionTimer != null) {
+            collisionTimer.cancel();
+            collisionTimer = null;
+        }
+
+        collisionTimer = new Timer();
+        collisionTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        // 衝突判定の条件式をメソッドにしちゃう
+                        if (checkCollision()) {
+                            appearNiwatoriRandom();
+                            addScore();
+                            Log.d("score = ", "" + score);
+                        }
                     }
                 });
 
             }
-        },0,30);
+        }, 0, 30);
     }
 
     public void hiyokoJump(View v) {
         jump_pow = 50;
-        if (jump_Timer != null){
-            jump_Timer.cancel();
-         }
-        jump_Timer = null;
+        if (jumpTimer != null) {
+            jumpTimer.cancel();
+            jumpTimer = null;
+        }
 
-        if (jump_Timer == null) {
+        //タイマーの初期化処理
+        jumpTimer = new Timer();
+        jumpTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
 
-            //タイマーの初期化処理
-            jump_Timer = new Timer();
-            jump_Timer.schedule(new TimerTask() {
-                @Override
-                public void run() {
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
 
-                    jump_Handler.post(new Runnable() {
-                        @Override
-                        public void run() {
-
-                            if (hiyoY <= shokiY && hiyoY >= 0) {    //ジャンプ中
-                                hiyoY -= jump_pow;
-                            }
-
-                            if (hiyoY > shokiY) {   //地面にめり込んだ時
-                                hiyoY = shokiY;
-                                jump_pow = 50;
-                                jump_Timer.cancel();
-                                jump_Timer = null;
-
-                            }
-
-                            if (hiyoY < 0) {    //天井にめり込んだ時
-                                hiyoY = 0;
-                                jump_pow = 0;
-                            }
-                            hiyoko.setY(hiyoY);
-                            jump_pow -= gravity;
+                        // ジャンプ中かどうかの判定もメソッドにしちゃう
+                        if (isHiyokoJumping()) {    //ジャンプ中
+                            hiyokoY -= jump_pow;
                         }
-                    });
-                }
-            },0, 30);
-        }
 
+                        if (hiyokoY > shokiY) {   //地面にめり込んだ時
+                            hiyokoY = shokiY;
+                            jump_pow = 50;
+                            jumpTimer.cancel();
+                            jumpTimer = null;
+                        }
+
+                        if (hiyokoY < 0) {    //天井にめり込んだ時
+                            hiyokoY = 0;
+                            jump_pow = 0;
+                        }
+
+                        hiyoko.setY(hiyokoY);
+                        jump_pow -= gravity;
+                    }
+                });
+            }
+        }, 0, 30);
     }
 
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
+    /*
+     * 使用するViewをまとめて初期化する
+     */
+    public void initViews() {
+        hiyoko = (ImageView) findViewById(R.id.hiyoko);
+        niwatori = (ImageView) findViewById(R.id.niwatori);
+
+        scoreText = (TextView) findViewById(R.id.score);
+        time_text = (TextView) findViewById(R.id.time);
+
+        scoreText.setText("" + score);
+        time_text.setText("" + time);
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
+    /*
+     * にわとりをランダムに出現させる
+     */
+    public void appearNiwatoriRandom() {
+        niwatori.setX(random.nextInt((int) (gameFrameWidth - niwatoriWidth)));
+        niwatori.setY(random.nextInt((int) (gameFrameHeight - niwatoriHeight)));
+    }
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
+    /*
+     * ひよこViewを横に移動させる
+     */
+    public void slideHiyoko(boolean direction) {
+        if (direction == DIRECTION_LEFT) {
+            hiyoko.setX(hiyoko.getX() - 30);
+        } else if(direction == DIRECTION_RIGHT){
+            hiyoko.setX(hiyoko.getX() + 30);
         }
+    }
 
-        return super.onOptionsItemSelected(item);
+    /*
+     * ひよこの向きを変更する
+     */
+    public void changeDirection() {
+        if (isLeftSideOver()) {
+            hiyokoDirection = DIRECTION_RIGHT;
+        } else if (isRightSideOver()) {
+            hiyokoDirection = DIRECTION_LEFT;
+        }
+    }
+
+    /*
+     * ひよこが左端を越えているかチェック
+     */
+    public boolean isLeftSideOver() {
+        return hiyoko.getX() < 0;
+    }
+
+    /*
+     * ひよこが右端を越えているかチェック
+     */
+    public boolean isRightSideOver() {
+        return hiyoko.getX() + hiyokoWidth > gameFrameWidth;
+    }
+
+    /*
+     * ひよことにわとりが衝突しているかチェック
+     */
+    public boolean checkCollision() {
+        return checkCollisionX() && checkCollisionY();
+    }
+
+    /*
+     * X軸方向にひよことにわとりが衝突しているかチェック
+     */
+    public boolean checkCollisionX() {
+        return hiyoko.getX() - niwatoriWidth < niwatori.getX() && niwatori.getX() < hiyoko.getX() + hiyokoWidth;
+    }
+
+    /*
+     * Y軸方向にひよことにわとりが衝突しているかチェック
+     */
+    public boolean checkCollisionY() {
+        return hiyoko.getY() - niwatoriHeight < niwatori.getY() && niwatori.getY() < hiyoko.getY() + hiyokoHeight;
+    }
+
+    /*
+     * ひよこがジャンプ中かどうかを確かめる
+     */
+    public boolean isHiyokoJumping(){
+        return hiyokoY <= shokiY && hiyokoY >= 0;
+    }
+
+    /*
+     * スコアを1足してviewに表示する
+     */
+    public void addScore() {
+        score++;
+        scoreText.setText(score + "");
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if(jump_Timer != null){
-            jump_Timer.cancel();
+        if (jumpTimer != null) {
+            jumpTimer.cancel();
         }
     }
 
