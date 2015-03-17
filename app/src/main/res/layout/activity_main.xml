@@ -3,9 +3,10 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity"
     android:weightSum="1"
-    android:nestedScrollingEnabled="false"
-    android:onClick="hiyokoJump"
-    android:orientation="vertical">
+    android:nestedScrollingEnabled="true"
+    android:onClick="niwatoriJumpTap"
+    android:orientation="vertical"
+    android:id="@+id/linearLayout">
 
     <TextView
         android:layout_width="match_parent"
@@ -30,22 +31,23 @@
     <FrameLayout
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:id="@+id/gameFrame">
-
-        <ImageView
-            android:layout_width="75dp"
-            android:layout_height="75dp"
-            android:id="@+id/hiyoko"
-            android:layout_gravity="bottom"
-            android:src="@drawable/hiyoko"
-            android:visibility="visible" />
+        android:id="@+id/gameFrame"
+        android:background="#87cefa">
 
         <ImageView
             android:layout_width="75dp"
             android:layout_height="75dp"
             android:id="@+id/niwatori"
+            android:layout_gravity="bottom"
+            android:src="@drawable/niwatori_right"
+            android:visibility="visible" />
+
+        <ImageView
+            android:layout_width="75dp"
+            android:layout_height="75dp"
+            android:id="@+id/hiyoko"
             android:layout_gravity="center_vertical"
-            android:src="@drawable/niwatori" />
+            android:src="@drawable/hiyoko" />
     </FrameLayout>
 
 </LinearLayout>

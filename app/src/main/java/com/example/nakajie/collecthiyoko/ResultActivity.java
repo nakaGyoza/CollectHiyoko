@@ -7,6 +7,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
+import android.view.View;
 import android.widget.TextView;
 
 
@@ -28,15 +29,11 @@ public class ResultActivity extends ActionBarActivity {
         }
     }
 
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        Log.d("TouchEvent", "X:" + event.getX() + ",Y:" + event.getY());
-        if (event.getAction() == MotionEvent.ACTION_DOWN){
+
+    public void goToStart(View v){
             finish();
             Intent intent = new Intent(ResultActivity.this, StartActivity.class);
             startActivity(intent);
-        }
-        return true;
     }
 
 

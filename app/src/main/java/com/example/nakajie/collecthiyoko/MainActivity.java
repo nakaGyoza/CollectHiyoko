@@ -1,6 +1,5 @@
 package com.example.nakajie.collecthiyoko;
 
-import android.animation.ObjectAnimator;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -9,6 +8,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import java.util.Random;
@@ -36,6 +36,7 @@ public class MainActivity extends ActionBarActivity {
     ImageView niwatori;
     TextView scoreText;
     TextView time_text;
+    View screen;
 
     /*
      * ひよこのサイズ
@@ -55,14 +56,24 @@ public class MainActivity extends ActionBarActivity {
     float gameFrameWidth;
     float gameFrameHeight;
 
-    int hiyokoY;
-    int hiyokoX;
+    /*
+     * 画面の高さ
+     */
+    float screenHeight;
+
+    /*
+     * にわとりの速度　
+     */
+    final int NIWATORI_SPEED_X = 30;
+
+    int niwatoriY;
+    int niwatoriX;
     int shokiY;
-    int gravity = 3;
+    int gravity = 2;
     int jump_pow = 42;
     int score;
 
-    boolean hiyokoDirection = false; //false...right true...left
+    boolean niwatoriDirection = false; //false...right true...left
 
     /*
      * 方向と値が決まっているのなら、名前をつけちゃう
@@ -84,7 +95,7 @@ public class MainActivity extends ActionBarActivity {
         handler = new Handler();
         random = new Random();
 
-        hiyokoTranslateX();
+        niwatoriTranslate();
         startCollisionTimer();
         startGameTimer();
     }
@@ -98,6 +109,8 @@ public class MainActivity extends ActionBarActivity {
              * あと、色んな所で使う必要のない変数はローカルに定義する
              */
             FrameLayout gameFrameView = (FrameLayout) findViewById(R.id.gameFrame);
+            LinearLayout deviceScreen = (LinearLayout) findViewById(R.id.linearLayout);
+
 
             /*
              * ゲームの領域を取得する
@@ -106,6 +119,11 @@ public class MainActivity extends ActionBarActivity {
              */
             gameFrameWidth = gameFrameView.getWidth();
             gameFrameHeight = gameFrameView.getHeight();
+
+            /*
+             * スクリーンの高さを取得する
+             */
+            screenHeight = deviceScreen.getHeight();
 
             // ローディング中の画像を表示する
             hiyoko.setVisibility(hiyoko.VISIBLE);
@@ -125,16 +143,17 @@ public class MainActivity extends ActionBarActivity {
             niwatoriWidth = niwatori.getWidth();
             niwatoriHeight = niwatori.getHeight();
 
-            // ひよこの初期座標取得
-            hiyokoX = 0;
-            hiyokoY = (int) (gameFrameHeight - hiyokoHeight);
-            shokiY = (int) hiyoko.getY();
-            Log.d("ひよこのY座標", "hiyokoY = " + hiyokoY);
+            // にわとりの初期座標取得
+            niwatoriX = 0;
+            niwatoriY = (int) (gameFrameHeight - niwatoriHeight);
+            niwatori.setY(niwatoriY);
+            shokiY = niwatoriY;
+            Log.d("にわとりのY座標", "niwatoriY = " + niwatoriY + "ニワトリとんでる？ : " + String.valueOf(isNiwatoriJumping()) + " 初期Y　：" + shokiY);
 
             /*
-             * にわとりの初期位置をランダムで決定する
+             * ひよこの初期位置をランダムで決定する
              */
-            appearNiwatoriRandom();
+            appearHiyokoRandom();
 
         }
         super.onWindowFocusChanged(hasFocus);
@@ -169,7 +188,7 @@ public class MainActivity extends ActionBarActivity {
     }
 
 
-    public void hiyokoTranslateX() {
+    public void niwatoriTranslate() {
         translateTimer = new Timer();
         translateTimer.schedule(new TimerTask() {
             @Override
@@ -177,13 +196,37 @@ public class MainActivity extends ActionBarActivity {
                 handler.post(new Runnable() {
                     @Override
                     public void run() {
-                        slideHiyoko(hiyokoDirection);
+                        slideNiwatori(niwatoriDirection);
                         changeDirection();
+
+                            if(niwatoriY > shokiY) {
+                                niwatoriY = shokiY;
+                                jump_pow = 42;
+
+                            }
+                            if (niwatoriY < 0) {
+                                niwatoriY = 0;
+                                jump_pow = 0;
+                            }
+
+
+                            niwatori.setY(niwatoriY);
+                            jump_pow -= gravity;
+                            if (isNiwatoriJumping()){
+                                niwatoriY -= jump_pow;;
+                            }
                     }
                 });
             }
         }, 0, 30);
     }
+
+    public void niwatoriJumpTap(View v){
+        Log.d("にわとりY座標 : ","" +niwatoriY);
+        jump_pow = 42;
+        niwatoriY -= jump_pow;
+    }
+
 
     public void startCollisionTimer() {  //当たり判定
         if (collisionTimer != null) {
@@ -200,7 +243,7 @@ public class MainActivity extends ActionBarActivity {
                     public void run() {
                         // 衝突判定の条件式をメソッドにしちゃう
                         if (checkCollision()) {
-                            appearNiwatoriRandom();
+                            appearHiyokoRandom();
                             addScore();
                             Log.d("score = ", "" + score);
                         }
@@ -211,47 +254,8 @@ public class MainActivity extends ActionBarActivity {
         }, 0, 30);
     }
 
-    public void hiyokoJump(View v) {
-        jump_pow = 50;
-        if (jumpTimer != null) {
-            jumpTimer.cancel();
-            jumpTimer = null;
-        }
 
-        //タイマーの初期化処理
-        jumpTimer = new Timer();
-        jumpTimer.schedule(new TimerTask() {
-            @Override
-            public void run() {
 
-                handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-
-                        // ジャンプ中かどうかの判定もメソッドにしちゃう
-                        if (isHiyokoJumping()) {    //ジャンプ中
-                            hiyokoY -= jump_pow;
-                        }
-
-                        if (hiyokoY > shokiY) {   //地面にめり込んだ時
-                            hiyokoY = shokiY;
-                            jump_pow = 50;
-                            jumpTimer.cancel();
-                            jumpTimer = null;
-                        }
-
-                        if (hiyokoY < 0) {    //天井にめり込んだ時
-                            hiyokoY = 0;
-                            jump_pow = 0;
-                        }
-
-                        hiyoko.setY(hiyokoY);
-                        jump_pow -= gravity;
-                    }
-                });
-            }
-        }, 0, 30);
-    }
 
 
     /*
@@ -264,52 +268,56 @@ public class MainActivity extends ActionBarActivity {
         scoreText = (TextView) findViewById(R.id.score);
         time_text = (TextView) findViewById(R.id.time);
 
+        screen = (View) findViewById(R.id.linearLayout);
+
         scoreText.setText("" + score);
         time_text.setText("" + time);
     }
 
     /*
-     * にわとりをランダムに出現させる
+     * ひよこをランダムに出現させる
      */
-    public void appearNiwatoriRandom() {
-        niwatori.setX(random.nextInt((int) (gameFrameWidth - niwatoriWidth)));
-        niwatori.setY(random.nextInt((int) (gameFrameHeight - niwatoriHeight)));
+    public void appearHiyokoRandom() {
+        hiyoko.setX(random.nextInt((int) (gameFrameWidth - hiyokoWidth)));
+        hiyoko.setY(random.nextInt((int) (gameFrameHeight - hiyokoHeight)));
     }
 
     /*
-     * ひよこViewを横に移動させる
+     * にわとりViewを横に移動させる
      */
-    public void slideHiyoko(boolean direction) {
+    public void slideNiwatori(boolean direction) {
         if (direction == DIRECTION_LEFT) {
-            hiyoko.setX(hiyoko.getX() - 30);
+            niwatori.setImageResource(R.drawable.niwatori_left);
+            niwatori.setX(niwatori.getX() - NIWATORI_SPEED_X);
         } else if(direction == DIRECTION_RIGHT){
-            hiyoko.setX(hiyoko.getX() + 30);
+            niwatori.setImageResource(R.drawable.niwatori_right);
+            niwatori.setX(niwatori.getX() + NIWATORI_SPEED_X);
         }
     }
 
     /*
-     * ひよこの向きを変更する
+     * にわとりの向きを変更する
      */
     public void changeDirection() {
         if (isLeftSideOver()) {
-            hiyokoDirection = DIRECTION_RIGHT;
+            niwatoriDirection = DIRECTION_RIGHT;
         } else if (isRightSideOver()) {
-            hiyokoDirection = DIRECTION_LEFT;
+            niwatoriDirection = DIRECTION_LEFT;
         }
     }
 
     /*
-     * ひよこが左端を越えているかチェック
+     * にわとりが左端を越えているかチェック
      */
     public boolean isLeftSideOver() {
-        return hiyoko.getX() < 0;
+        return niwatori.getX() < 0;
     }
 
     /*
-     * ひよこが右端を越えているかチェック
+     * にわとりが右端を越えているかチェック
      */
     public boolean isRightSideOver() {
-        return hiyoko.getX() + hiyokoWidth > gameFrameWidth;
+        return niwatori.getX() + niwatoriWidth > gameFrameWidth;
     }
 
     /*
@@ -323,21 +331,21 @@ public class MainActivity extends ActionBarActivity {
      * X軸方向にひよことにわとりが衝突しているかチェック
      */
     public boolean checkCollisionX() {
-        return hiyoko.getX() - niwatoriWidth < niwatori.getX() && niwatori.getX() < hiyoko.getX() + hiyokoWidth;
+        return niwatori.getX() + niwatoriWidth > hiyoko.getX() && niwatori.getX() < hiyoko.getX() + hiyokoWidth;
     }
 
     /*
      * Y軸方向にひよことにわとりが衝突しているかチェック
      */
     public boolean checkCollisionY() {
-        return hiyoko.getY() - niwatoriHeight < niwatori.getY() && niwatori.getY() < hiyoko.getY() + hiyokoHeight;
+        return niwatori.getY() + niwatoriHeight > hiyoko.getY() && niwatori.getY() < hiyoko.getY() + hiyokoHeight;
     }
 
     /*
-     * ひよこがジャンプ中かどうかを確かめる
+     * にわとりがジャンプ中かどうかを確かめる
      */
-    public boolean isHiyokoJumping(){
-        return hiyokoY <= shokiY && hiyokoY >= 0;
+    public boolean isNiwatoriJumping(){
+        return niwatoriY < shokiY && niwatoriY >= 0;
     }
 
     /*
