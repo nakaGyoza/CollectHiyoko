@@ -32,11 +32,15 @@ public class MainActivity extends ActionBarActivity {
     /*
      * 各View
      */
-    ImageView hiyoko;
+
+    ImageView hiyokoImage;
+    ImageView hiyoko[];
     ImageView niwatori;
     TextView scoreText;
     TextView time_text;
     View screen;
+    FrameLayout gameScreen;
+
 
     /*
      * ひよこのサイズ
@@ -95,6 +99,8 @@ public class MainActivity extends ActionBarActivity {
         handler = new Handler();
         random = new Random();
 
+
+
         niwatoriTranslate();
         startCollisionTimer();
         startGameTimer();
@@ -125,15 +131,22 @@ public class MainActivity extends ActionBarActivity {
              */
             screenHeight = deviceScreen.getHeight();
 
+             /*
+             * ひよこの初期位置をランダムで決定する
+             */
+            appearHiyokoRandom();
+
             // ローディング中の画像を表示する
-            hiyoko.setVisibility(hiyoko.VISIBLE);
+            for (byte i = 0;i < 3;i++) {
+                hiyoko[i].setVisibility(hiyoko[i].VISIBLE);
+            }
             niwatori.setVisibility(niwatori.VISIBLE);
 
             /*
              * ひよこの縦横のサイズを取得する
              */
-            hiyokoWidth = hiyoko.getWidth();
-            hiyokoHeight = hiyoko.getHeight();
+            hiyokoWidth = hiyoko[0].getWidth();
+            hiyokoHeight = hiyoko[0].getHeight();
 
             Log.d("ひよこの横幅", "hiyowidth = " + hiyokoWidth);
 
@@ -150,10 +163,7 @@ public class MainActivity extends ActionBarActivity {
             shokiY = niwatoriY;
             Log.d("にわとりのY座標", "niwatoriY = " + niwatoriY + "ニワトリとんでる？ : " + String.valueOf(isNiwatoriJumping()) + " 初期Y　：" + shokiY);
 
-            /*
-             * ひよこの初期位置をランダムで決定する
-             */
-            appearHiyokoRandom();
+
 
         }
         super.onWindowFocusChanged(hasFocus);
@@ -242,11 +252,13 @@ public class MainActivity extends ActionBarActivity {
                     @Override
                     public void run() {
                         // 衝突判定の条件式をメソッドにしちゃう
-                        if (checkCollision()) {
-                            appearHiyokoRandom();
-                            addScore();
-                            Log.d("score = ", "" + score);
-                        }
+                       for (byte i = 0; i < 3 ; i++) {
+                           if (checkCollision(i)) {
+                               appearHiyokoRandom();
+                               addScore();
+                               Log.d("score = ", "" + score);
+                           }
+                       }
                     }
                 });
 
@@ -262,24 +274,33 @@ public class MainActivity extends ActionBarActivity {
      * 使用するViewをまとめて初期化する
      */
     public void initViews() {
-        hiyoko = (ImageView) findViewById(R.id.hiyoko);
-        niwatori = (ImageView) findViewById(R.id.niwatori);
-
         scoreText = (TextView) findViewById(R.id.score);
         time_text = (TextView) findViewById(R.id.time);
 
-        screen = (View) findViewById(R.id.linearLayout);
+        gameScreen = (FrameLayout)findViewById(R.id.gameFrame);
+        screen = findViewById(R.id.linearLayout);
 
         scoreText.setText("" + score);
         time_text.setText("" + time);
+
+        niwatori = (ImageView) findViewById(R.id.niwatori);
+
+        hiyoko = new ImageView[3];
+        for (byte i = 0 ; i < 3 ; i++){
+            hiyoko[i] = new ImageView(this);
+            hiyoko[i].setImageResource(R.drawable.hiyoko);
+            gameScreen.addView(hiyoko[i]);
+        }
     }
 
     /*
      * ひよこをランダムに出現させる
      */
     public void appearHiyokoRandom() {
-        hiyoko.setX(random.nextInt((int) (gameFrameWidth - hiyokoWidth)));
-        hiyoko.setY(random.nextInt((int) (gameFrameHeight - hiyokoHeight)));
+        for (byte i = 0 ; i < 3 ; i++) {
+            hiyoko[i].setX(random.nextInt((int) (gameFrameWidth - hiyokoWidth)));
+            hiyoko[i].setY(random.nextInt((int) (gameFrameHeight - hiyokoHeight)));
+        }
     }
 
     /*
@@ -323,22 +344,22 @@ public class MainActivity extends ActionBarActivity {
     /*
      * ひよことにわとりが衝突しているかチェック
      */
-    public boolean checkCollision() {
-        return checkCollisionX() && checkCollisionY();
+    public boolean checkCollision(byte b) {
+        return checkCollisionX(b) && checkCollisionY(b);
     }
 
     /*
      * X軸方向にひよことにわとりが衝突しているかチェック
      */
-    public boolean checkCollisionX() {
-        return niwatori.getX() + niwatoriWidth > hiyoko.getX() && niwatori.getX() < hiyoko.getX() + hiyokoWidth;
+    public boolean checkCollisionX(byte b) {
+        return niwatori.getX() + niwatoriWidth > hiyoko[b].getX() && niwatori.getX() < hiyoko[b].getX() + hiyokoWidth;
     }
 
     /*
      * Y軸方向にひよことにわとりが衝突しているかチェック
      */
-    public boolean checkCollisionY() {
-        return niwatori.getY() + niwatoriHeight > hiyoko.getY() && niwatori.getY() < hiyoko.getY() + hiyokoHeight;
+    public boolean checkCollisionY(byte b) {
+        return niwatori.getY() + niwatoriHeight > hiyoko[b].getY() && niwatori.getY() < hiyoko[b].getY() + hiyokoHeight;
     }
 
     /*
