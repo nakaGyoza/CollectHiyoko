@@ -5,7 +5,7 @@ android {
     buildToolsVersion "21.1.2"
 
     defaultConfig {
-        applicationId "com.example.nakajie.collecthiyoko"
+        applicationId "com.nakag.game.hiyocollect"
         minSdkVersion 15
         targetSdkVersion 21
         versionCode 1

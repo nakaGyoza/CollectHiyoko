@@ -5,37 +5,114 @@
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
     android:paddingBottom="@dimen/activity_vertical_margin"
-    tools:context="com.example.nakajie.collecthiyoko.ResultActivity">
+    tools:context="com.example.nakajie.hiyocollect.ResultActivity"
+    android:background="#99ccff">
 
-    <TextView
+    <LinearLayout
+        android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="結果"
-        android:id="@+id/textView3"
-        android:textSize="50dp"
-        android:textStyle="bold"
-        android:layout_weight="1"
-        android:gravity="center|bottom" />
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="0点"
-        android:id="@+id/score_text"
         android:layout_gravity="center_horizontal"
-        android:layout_weight="1"
-        android:textSize="40dp"
-        android:textStyle="bold"
-        android:gravity="center" />
+        android:layout_weight="8"
+        android:id="@+id/scoreResult">
 
-    <Button
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:text="Result"
+            android:id="@+id/textView3"
+            android:textSize="50dp"
+            android:textStyle="bold"
+            android:layout_weight="23"
+            android:gravity="center|bottom"
+            android:textColor="#FFFFFF" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:text="0"
+            android:id="@+id/score_text"
+            android:layout_gravity="center_horizontal"
+            android:layout_weight="20"
+            android:textSize="45dp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:textColor="#FFFFFF" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:text="スタート画面へ"
-        android:id="@+id/button"
         android:layout_gravity="center_horizontal"
-        android:layout_weight="1"
-        android:onClick="goToStart" />
+        android:layout_weight="10"
+        android:background="#00000000">
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center_horizontal|right"
+            android:layout_weight="5"
+            android:layout_marginRight="15dp"
+            android:gravity="right"
+            android:id="@+id/shareButtons">
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/lineButton"
+                android:src="@drawable/line_button"
+                android:adjustViewBounds="true"
+                android:scaleType="fitXY"
+                android:onClick="lineShare" />
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:id="@+id/twitterButton"
+                android:src="@drawable/tweet_button"
+                android:adjustViewBounds="true"
+                android:onClick="twitterShare"
+                android:layout_marginLeft="10dp" />
+
+        </LinearLayout>
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="Go to Start"
+            android:id="@+id/goToStart"
+            android:layout_gravity="center_horizontal"
+            android:layout_weight="4"
+            android:onClick="goToStart"
+            android:background="@drawable/kadomaru_button"
+            android:textColor="#ffffff"
+            android:textSize="35dp"
+            android:layout_marginTop="15dp" />
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="Quit Game"
+            android:id="@+id/quitGame"
+            android:layout_weight="4"
+            android:layout_marginTop="15dp"
+            android:textSize="35dp"
+            android:textColor="#ffffff"
+            android:background="@drawable/kadomaru_button"
+            android:onClick="quitGame" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center_horizontal"
+        android:layout_weight="15"></LinearLayout>
+
+
 </LinearLayout>
