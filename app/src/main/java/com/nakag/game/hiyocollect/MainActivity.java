@@ -47,7 +47,7 @@ public class MainActivity extends Activity {
     int timeCnt = 0; //1秒ごとにtimeを１減らすための変数
 
     /*
-     * 各View
+     * 各View・
      */
 
     ArrayList<ImageView> hiyoko = new ArrayList<ImageView>();
