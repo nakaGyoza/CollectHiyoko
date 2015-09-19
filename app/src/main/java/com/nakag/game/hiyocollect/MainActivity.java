@@ -37,8 +37,8 @@ public class MainActivity extends Activity {
 
     Handler handler;
     Timer translateTimer = null,
-          collisionTimer = null,
-          gameTimer = null;
+            collisionTimer = null,
+            gameTimer = null;
 
     /*
      * タイマーの時間を減らすための変数
@@ -71,8 +71,8 @@ public class MainActivity extends Activity {
     boolean isResult = false;           //結果画面にいるか
     boolean doVibrate = true;           //バイブレーションするか
 
-    private final int LINE_ID = 0;
-    private final int TWITTER_ID = 1;
+    private final static int LINE_ID = 0;
+    private final static int TWITTER_ID = 1;
     private final String[] sharePackages = {"jp.naver.line.android", "com.twitter.android"};
 
 
@@ -96,7 +96,7 @@ public class MainActivity extends Activity {
     int niwatoriHeight;
 
     /*
-     * にわとりの速度　
+     * にわとりの速度
      */
     int niwatoriSpeedX;
 
@@ -529,15 +529,15 @@ public class MainActivity extends Activity {
      */
     public void vibrate() {
 
-            if(Thread.activeCount()<15){
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        hiyokoGetEffect.vibrate(50);
-                    }
-                }).start();
-            }
-        Log.d("Active Count", ":"+Thread.activeCount());
+        if (Thread.activeCount() < 15) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    hiyokoGetEffect.vibrate(50);
+                }
+            }).start();
+        }
+        Log.d("Active Count", ":" + Thread.activeCount());
     }
 
 
